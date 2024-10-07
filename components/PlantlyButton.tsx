@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Platform, Pressable, StyleSheet, Text } from "react-native";
 import { theme } from "@/theme";
 import React from "react";
+import * as Haptics from 'expo-haptics'
 
 type Props = {
     title:string;
@@ -8,8 +9,22 @@ type Props = {
 }
 export default function PlantlyButton({title,onPress}:Props){
 
+
+      function handlePress(){
+        if(Platform.OS !== 'web'){
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+        
+         onPress();
+      }
+
     return(
-        <Pressable onPress={onPress} style={styles.button}>
+        <Pressable onPress={handlePress} style={(state)=>{
+            if(state.pressed){
+                return [styles.button,styles.buttonPressed]
+            }
+            return styles.button
+        }}> 
            <Text  style={styles.text}>{title}</Text>
         </Pressable>
     )
@@ -21,6 +36,7 @@ const styles = StyleSheet.create({
         color: "white",
         fontSize: 18,
         fontWeight: "bold",
+        textAlign:"center"
       },
       button: {
         paddingHorizontal: 18,
@@ -28,4 +44,7 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         backgroundColor: theme.colorGreen,
       },
+      buttonPressed:{
+        backgroundColor: theme.colorLeafyGreen,
+      }
 })

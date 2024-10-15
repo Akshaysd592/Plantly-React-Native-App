@@ -2,14 +2,16 @@ import { PlantType } from "@/store/plantStore";
 import { theme } from "@/theme";
 
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import PlantlyImage from "./PlantlyImage";
+import { Link } from "expo-router";
 
 
 export default function PlantCard({plant}:{plant: PlantType}){
     return (
-        <View style={styles.plantCard}>
-            <PlantlyImage size={100}/>
+      <Link href={`plants/${plant.id}`} asChild>
+        <Pressable style={styles.plantCard}>
+            <PlantlyImage size={100} imageUri={plant.imageUri}/>
             <View style={styles.details}>
                 <Text numberOfLines={1} style={styles.plantName}>
                     {plant.name}
@@ -20,7 +22,9 @@ export default function PlantCard({plant}:{plant: PlantType}){
             </View>
  
 
-        </View>
+        </Pressable>
+
+        </Link>
     )
 }
 

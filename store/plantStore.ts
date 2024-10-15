@@ -4,19 +4,20 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-
+import * as FileSystem from 'expo-file-system'
 
 export type PlantType = {
     id: string;
     name: string;
     wateringFrequencyDays: number;
     lastWateredAtTimestamp?: number;
+    imageUri?: string
 };
 
 export type PlantsState = {
     nextId: number;
     plants: PlantType[];
-    addPlant: (name: string, wateringFrequencyDays: number) => void;
+    addPlant: (name: string, wateringFrequencyDays: number, imageUri?: string) => Promise<void>;
     removePlant: (plantId: string) => void;
     waterPlant: (plantId: string) => void;
 };
@@ -28,7 +29,24 @@ export const usePlantStore = create(
             {
                 plants: [], // initial values 
                 nextId: 1,  //initial values
-                addPlant: (name: string, wateringFrequencyDays: number) => {
+                addPlant: async (name: string, wateringFrequencyDays: number, imageUri?: string) => {
+
+
+                    //-----------------------for image storage
+                   // create a directory to store image
+                    const saveImageUri = FileSystem.documentDirectory + `${new Date().getTime()}-${imageUri?.split("/").slice(-1)[0]}`;
+
+                    if(imageUri){ // copy image from uri
+                        await FileSystem.copyAsync({
+                            from: imageUri,
+                            to:saveImageUri
+                        })
+                    }
+
+
+
+
+                    // ----------------------
                     return set((state) => {
                         return {
                             ...state,
@@ -38,26 +56,27 @@ export const usePlantStore = create(
                                     id: String(state.nextId),
                                     name,
                                     wateringFrequencyDays,
+                                    imageUri: imageUri ? saveImageUri : undefined,
                                 },
                                 ...state.plants
                             ],
                         };
                     })
                 },
-                removePlant:(plantId:string)=>{
-                    return set((state)=>{
-                       return {
-                        ...state,
-                        plants: state.plants.filter((plant)=> plant.id !== plantId),
-                       }
-                    })
-                },
-                waterPlant:(plantId: string)=>{
-                    return set((state)=>{
+                removePlant: (plantId: string) => {
+                    return set((state) => {
                         return {
                             ...state,
-                            plants: state.plants.map((plant)=>{
-                                if(plant.id === plantId){
+                            plants: state.plants.filter((plant) => plant.id !== plantId),
+                        }
+                    })
+                },
+                waterPlant: (plantId: string) => {
+                    return set((state) => {
+                        return {
+                            ...state,
+                            plants: state.plants.map((plant) => {
+                                if (plant.id === plantId) {
                                     return {
                                         ...plant,
                                         lastWateredAtTimestamp: Date.now(),
@@ -73,7 +92,7 @@ export const usePlantStore = create(
         ),
         {
             name: "plantly-plants-store",
-            storage: createJSONStorage (()=> AsyncStorage),
+            storage: createJSONStorage(() => AsyncStorage),
         }
     ),
 );
